@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import cors from "cors";
 import { LowSync } from "lowdb";
 import { JSONFileSync } from "lowdb/node";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,13 +24,18 @@ interface Schema {
   bookings: Booking[];
 }
 
-const dbFile = path.resolve(__dirname, "data", "bookings.json");
+const rootDir = path.resolve(__dirname, "..");
+const dbFile = path.resolve(rootDir, "data", "bookings.json");
+
+// Ensure the data directory exists
+fs.mkdirSync(path.dirname(dbFile), { recursive: true });
+
 const adapter = new JSONFileSync<Schema>(dbFile);
 // Provide default data to avoid "missing default data" error
 const db = new LowSync<Schema>(adapter, { bookings: [] });
 // Load existing data or initialize
 db.read();
-if (!db.data) {
+if (!fs.existsSync(dbFile)) {
   db.data = { bookings: [] };
   db.write();
 }
